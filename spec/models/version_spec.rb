@@ -6,13 +6,6 @@ describe PaperTrail::Version, type: :model do
   end
 
   describe "Attributes" do
-    it { is_expected.to have_db_column(:item_type).of_type(:string) }
-    it { is_expected.to have_db_column(:item_id).of_type(:integer) }
-    it { is_expected.to have_db_column(:event).of_type(:string) }
-    it { is_expected.to have_db_column(:whodunnit).of_type(:string) }
-    it { is_expected.to have_db_column(:object).of_type(:text) }
-    it { is_expected.to have_db_column(:created_at).of_type(:datetime) }
-
     describe "object_changes column", versioning: true do
       let(:widget) { Widget.create!(name: "Dashboard") }
       let(:value) { widget.versions.last.object_changes }
@@ -37,15 +30,11 @@ describe PaperTrail::Version, type: :model do
     end
   end
 
-  describe "Indexes" do
-    it { is_expected.to have_db_index([:item_type, :item_id]) }
-  end
-
   describe "Methods" do
     describe "Instance" do
       subject { PaperTrail::Version.new }
 
-      describe '#paper_trail_originator' do
+      describe "#paper_trail_originator" do
         it { is_expected.to respond_to(:paper_trail_originator) }
 
         context "No previous versions" do
@@ -89,7 +78,7 @@ describe PaperTrail::Version, type: :model do
         end
       end
 
-      describe '#terminator' do
+      describe "#terminator" do
         let(:attributes) { { whodunnit: FFaker::Name.first_name } }
         subject { PaperTrail::Version.new attributes }
 
@@ -100,7 +89,7 @@ describe PaperTrail::Version, type: :model do
         end
       end
 
-      describe '#version_author' do
+      describe "#version_author" do
         it { is_expected.to respond_to(:version_author) }
 
         it "should be an alias for the `terminator` method" do
@@ -140,7 +129,7 @@ describe PaperTrail::Version, type: :model do
             end
           end
 
-          describe '#where_object' do
+          describe "#where_object" do
             it { expect(PaperTrail::Version).to respond_to(:where_object) }
 
             context "invalid arguments" do
@@ -205,7 +194,7 @@ describe PaperTrail::Version, type: :model do
             end
           end
 
-          describe '#where_object_changes' do
+          describe "#where_object_changes" do
             context "invalid arguments" do
               it "should raise an error" do
                 expect {

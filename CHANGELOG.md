@@ -1,4 +1,88 @@
-## 5.1.1 (Unreleased)
+# Changelog
+
+This project follows [semver 2.0.0](http://semver.org/spec/v2.0.0.html) and the
+recommendations of [keepachangelog.com](http://keepachangelog.com/).
+
+## Unreleased
+
+### Breaking Changes
+
+- The model methods deprecated in 5.2.0 have been removed. Use paper_trail.x
+  instead of x.
+- `timestamp_field=` removed without replacement. It is no longer configurable. The
+  timestamp field in the `versions` table must now be named `created_at`.
+
+### Deprecated
+
+- None
+
+### Added
+
+- None
+
+### Fixed
+
+## 5.2.2 (2016-09-08)
+
+### Breaking Changes
+
+- None
+
+### Deprecated
+
+- [#863](https://github.com/airblade/paper_trail/pull/863)
+  PaperTrail.timestamp_field= deprecated without replacement.
+  See [#861](https://github.com/airblade/paper_trail/pull/861) for discussion.
+
+### Added
+
+- None
+
+### Fixed
+
+## 5.2.1 (2016-09-02)
+
+### Breaking Changes
+
+- None
+
+### Deprecated
+
+- None
+
+### Added
+
+- None
+
+### Fixed
+
+- [#857](https://github.com/airblade/paper_trail/pull/857) -
+  Fix deserialization of enums written by PT 4.
+- [#798](https://github.com/airblade/paper_trail/issues/798) -
+  Fix a rare bug with serialization of enums in rails 4.2 only when
+  using `touch_with_version`.
+
+## 5.2.0 (2016-06-27)
+
+### Breaking Changes
+
+- None
+
+### Deprecated
+
+- [#719](https://github.com/airblade/paper_trail/pull/719) -
+  The majority of model methods. Use paper_trail.x instead of x. Why? Your
+  models are a crowded namespace, and we want to get out of your way!
+
+### Added
+
+- None
+
+### Fixed
+
+- None
+
+## 5.1.1 (2016-05-31)
 
 ### Breaking Changes
 
@@ -10,6 +94,8 @@
 
 ### Fixed
 
+- [#813](https://github.com/airblade/paper_trail/pull/813) -
+  Warning for paper_trail_on_destroy(:after) for pre-releases of AR 5
 - [#651](https://github.com/airblade/paper_trail/issues/651) -
   Bug with installing PT on MySQL <= 5.6
 
@@ -64,8 +150,8 @@
 - [#556](https://github.com/airblade/paper_trail/pull/556) /
   [#301](https://github.com/airblade/paper_trail/issues/301) -
   If you are tracking who is responsible for changes with `whodunnit`, be aware
-  that PaperTrail no longer adds the `set_paper_trail_whodunnit` before_filter
-  for you. Please add this before_filter to your ApplicationController to
+  that PaperTrail no longer adds the `set_paper_trail_whodunnit` before_action
+  for you. Please add this before_action to your ApplicationController to
   continue recording whodunnit. See the readme for an example.
 - [#683](https://github.com/airblade/paper_trail/pull/683) /
   [#682](https://github.com/airblade/paper_trail/issues/682) -
@@ -105,6 +191,22 @@
   webserver.
 - [#584](https://github.com/airblade/paper_trail/issues/584) -
   Fixed deprecation warning for Active Record after_callback / after_commit
+
+## 4.2.0 (2016-05-31)
+
+### Breaking Changes
+
+- None
+
+### Added
+
+- [#808](https://github.com/airblade/paper_trail/pull/808) -
+  Warn when destroy callback is set to :after with ActiveRecord 5
+  option `belongs_to_required_by_default` set to `true`.
+
+### Fixed
+
+- None
 
 ## 4.1.0 (2016-01-30)
 

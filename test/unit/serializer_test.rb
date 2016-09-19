@@ -2,16 +2,20 @@ require "test_helper"
 require "custom_json_serializer"
 
 class SerializerTest < ActiveSupport::TestCase
+  setup do
+    # Clean up after test/unit/model_test.rb
+    Fluxor.reset_callbacks :create
+    Fluxor.reset_callbacks :update
+    Fluxor.reset_callbacks :destroy
+    Fluxor.instance_eval "has_paper_trail"
+  end
+
   context "YAML Serializer" do
     setup do
-      Fluxor.instance_eval <<-END
-        has_paper_trail
-      END
-
       @fluxor = Fluxor.create name: "Some text."
 
       # this is exactly what PaperTrail serializes
-      @original_fluxor_attributes = @fluxor.send(:attributes_before_change)
+      @original_fluxor_attributes = @fluxor.paper_trail.attributes_before_change
 
       @fluxor.update_attributes name: "Some more text."
     end
@@ -34,14 +38,10 @@ class SerializerTest < ActiveSupport::TestCase
         config.serializer = PaperTrail::Serializers::JSON
       end
 
-      Fluxor.instance_eval <<-END
-        has_paper_trail
-      END
-
       @fluxor = Fluxor.create name: "Some text."
 
       # this is exactly what PaperTrail serializes
-      @original_fluxor_attributes = @fluxor.send(:attributes_before_change)
+      @original_fluxor_attributes = @fluxor.paper_trail.attributes_before_change
 
       @fluxor.update_attributes name: "Some more text."
     end
@@ -77,15 +77,12 @@ class SerializerTest < ActiveSupport::TestCase
         config.serializer = CustomJsonSerializer
       end
 
-      Fluxor.instance_eval <<-END
-        has_paper_trail
-      END
-
       @fluxor = Fluxor.create
 
       # this is exactly what PaperTrail serializes
       @original_fluxor_attributes = @fluxor.
-        send(:attributes_before_change).
+        paper_trail.
+        attributes_before_change.
         reject { |_k, v| v.nil? }
 
       @fluxor.update_attributes name: "Some more text."

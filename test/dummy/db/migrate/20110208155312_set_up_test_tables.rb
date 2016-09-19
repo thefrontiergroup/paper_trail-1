@@ -32,7 +32,6 @@ class SetUpTestTables < ActiveRecord::Migration
       t.time      :a_time
       t.date      :a_date
       t.boolean   :a_boolean
-      t.string    :sacrificial_column
       t.string    :type
       t.timestamps null: true
     end
@@ -173,6 +172,7 @@ class SetUpTestTables < ActiveRecord::Migration
 
     create_table :post_with_statuses, force: true do |t|
       t.integer :status
+      t.timestamps null: false
     end
 
     create_table :animals, force: true do |t|

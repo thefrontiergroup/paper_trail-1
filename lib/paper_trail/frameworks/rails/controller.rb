@@ -90,11 +90,16 @@ module PaperTrail
       end
 
       def warn_about_not_setting_whodunnit
-        enabled = ::PaperTrail.enabled_for_controller?
+        return unless ::PaperTrail.enabled_for_controller?
+
         user_present = user_for_paper_trail.present?
         whodunnit_blank = ::PaperTrail.whodunnit.blank?
-        if enabled && user_present && whodunnit_blank && !@set_paper_trail_whodunnit_called
+        if user_present && whodunnit_blank && !@set_paper_trail_whodunnit_called
+          source_file_location = self.class.instance_methods(false).map { |m|
+            self.class.instance_method(m).source_location.first
+          }.uniq.first
           ::Kernel.warn <<-EOS.strip_heredoc
+            #{source_file_location}:
             user_for_paper_trail is present, but whodunnit has not been set.
             PaperTrail no longer adds the set_paper_trail_whodunnit callback for
             you. To continue recording whodunnit, please add this before_action

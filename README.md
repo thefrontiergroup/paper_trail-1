@@ -10,12 +10,12 @@ has been destroyed.
 
 | Version        | Documentation |
 | -------------- | ------------- |
-| 5              | https://github.com/airblade/paper_trail/blob/master/README.md |
-| 4.1            | https://github.com/airblade/paper_trail/blob/4.1-stable/README.md |
-| 4.0            | https://github.com/airblade/paper_trail/blob/4.0-stable/README.md |
-| 3              | https://github.com/airblade/paper_trail/blob/3.0-stable/README.md |
-| 2              | https://github.com/airblade/paper_trail/blob/2.7-stable/README.md |
-| 1              | https://github.com/airblade/paper_trail/blob/rails2/README.md |
+| Unreleased     | https://github.com/airblade/paper_trail/blob/master/README.md |
+| 5.2.2          | https://github.com/airblade/paper_trail/blob/v5.2.2/README.md |
+| 4.2.0          | https://github.com/airblade/paper_trail/blob/v4.2.0/README.md |
+| 3.0.9          | https://github.com/airblade/paper_trail/blob/v3.0.9/README.md |
+| 2.7.2          | https://github.com/airblade/paper_trail/blob/v2.7.2/README.md |
+| 1.6.5          | https://github.com/airblade/paper_trail/blob/v1.6.5/README.md |
 
 ## Table of Contents
 
@@ -24,6 +24,7 @@ has been destroyed.
   - [1.b. Installation](#1b-installation)
   - [1.c. Basic Usage](#1c-basic-usage)
   - [1.d. API Summary](#1d-api-summary)
+  - [1.e. Configuration](#1e-configuration)
 - [2. Limiting What is Versioned, and When](#2-limiting-what-is-versioned-and-when)
   - [2.a. Choosing Lifecycle Events To Monitor](#2a-choosing-lifecycle-events-to-monitor)
   - [2.b. Choosing When To Save New Versions](#2b-choosing-when-to-save-new-versions)
@@ -38,6 +39,7 @@ has been destroyed.
 - [4. Saving More Information About Versions](#4-saving-more-information-about-versions)
   - [4.a. Finding Out Who Was Responsible For A Change](#4a-finding-out-who-was-responsible-for-a-change)
   - [4.b. Associations](#4b-associations)
+    - [4.b.1. Known Issues](#4b1-known-issues)
   - [4.c. Storing metadata](#4c-storing-metadata)
 - [5. ActiveRecord](#5-activerecord)
   - [5.a. Single Table Inheritance](#5a-single-table-inheritance-sti)
@@ -55,8 +57,9 @@ has been destroyed.
 
 | paper_trail    | branch     | tags   | ruby     | activerecord |
 | -------------- | ---------- | ------ | -------- | ------------ |
-| 5              | master     | v5.x   | >= 1.9.3 | >= 3.0, < 6  |
-| 4              | 4.0-stable | v4.x   | >= 1.8.7 | >= 3.0, < 6  |
+| 6 (unreleased) | master     |        | >= 1.9.3 | >= 3.0, < 6  |
+| 5              | 5-stable   | v5.x   | >= 1.9.3 | >= 3.0, < 6  |
+| 4              | 4-stable   | v4.x   | >= 1.8.7 | >= 3.0, < 6  |
 | 3              | 3.0-stable | v3.x   | >= 1.8.7 | >= 3.0, < 5  |
 | 2              | 2.7-stable | v2.x   | >= 1.8.7 | >= 3.0, < 4  |
 | 1              | rails2     | v1.x   | >= 1.8.7 | >= 2.3, < 3  |
@@ -67,7 +70,7 @@ has been destroyed.
 
     `gem 'paper_trail'`
 
-1. Add a `versions` table to your database.
+1. Add a `versions` table to your database and an initializer file for configuration:
 
     ```
     bundle exec rails generate paper_trail:install
@@ -87,12 +90,12 @@ has been destroyed.
     ```
 
 1. If your controllers have a `current_user` method, you can easily [track who
-is responsible for changes](#finding-out-who-was-responsible-for-a-change)
+is responsible for changes](#4a-finding-out-who-was-responsible-for-a-change)
 by adding a controller callback.
 
     ```ruby
     class ApplicationController
-      before_filter :set_paper_trail_whodunnit
+      before_action :set_paper_trail_whodunnit
     end
     ```
 
@@ -171,35 +174,35 @@ widget.version
 
 # Returns true if this widget is the current, live one; or false if it is from
 # a previous version.
-widget.live?
+widget.paper_trail.live?
 
 # Returns who put the widget into its current state.
-widget.paper_trail_originator
+widget.paper_trail.originator
 
 # Returns the widget (not a version) as it looked at the given timestamp.
-widget.version_at(timestamp)
+widget.paper_trail.version_at(timestamp)
 
 # Returns the widget (not a version) as it was most recently.
-widget.previous_version
+widget.paper_trail.previous_version
 
 # Returns the widget (not a version) as it became next.
-widget.next_version
+widget.paper_trail.next_version
 
 # Generates a version for a `touch` event (`widget.touch` does NOT generate a
 # version)
-widget.touch_with_version
+widget.paper_trail.touch_with_version
 
 # Turn PaperTrail off for all widgets.
-Widget.paper_trail_off!
+Widget.paper_trail.disable
 
 # Turn PaperTrail on for all widgets.
-Widget.paper_trail_on!
+Widget.paper_trail.enable
 
 # Is PaperTrail enabled for Widget, the class?
-Widget.paper_trail_enabled_for_model?
+Widget.paper_trail.enabled?
 
 # Is PaperTrail enabled for widget, the instance?
-widget.paper_trail_enabled_for_model?
+widget.paper_trail.enabled_for_model?
 ```
 
 And a `PaperTrail::Version` instance (which is just an ordinary ActiveRecord
@@ -252,6 +255,18 @@ user_for_paper_trail
 info_for_paper_trail
 ```
 
+### 1.e. Configuration
+
+Many aspects of PaperTrail are configurable for individual models; typically
+this is achieved by passing options to the `has_paper_trail` method within
+a given model.
+
+Some aspects of PaperTrail are configured globally for all models. These
+settings are assigned directly on the `PaperTrail.config` object.
+A common place to put these settings is in a Rails initializer file
+such as `config/initializers/paper_trail.rb` or in an environment-specific
+configuration file such as `config/environments/test.rb`.
+
 ## 2. Limiting What is Versioned, and When
 
 ### 2.a. Choosing Lifecycle Events To Monitor
@@ -269,7 +284,7 @@ end
 other callbacks in your model, their order relative to those installed by
 PaperTrail may matter, so be aware of any potential interactions.
 
-You may also have the `PaperTrail::Version` model save a custom string in it's
+You may also have the `PaperTrail::Version` model save a custom string in its
 `event` field instead of the typical `create`, `update`, `destroy`. PaperTrail
 supplies a custom accessor method called `paper_trail_event`, which it will
 attempt to use to fill the `event` field before falling back on one of the
@@ -302,13 +317,13 @@ class Article < ActiveRecord::Base
   has_paper_trail :on => []
 
   # Add callbacks in the order you need.
-  paper_trail_on_destroy    # add destroy callback
-  paper_trail_on_update     # etc.
-  paper_trail_on_create
+  paper_trail.on_destroy    # add destroy callback
+  paper_trail.on_update     # etc.
+  paper_trail.on_create
 end
 ```
 
-The `paper_trail_on_destroy` method can be further configured to happen
+The `paper_trail.on_destroy` method can be further configured to happen
 `:before` or `:after` the destroy event. In PaperTrail 4, the default is
 `:after`. In PaperTrail 5, the default will be `:before`, to support
 ActiveRecord 5. (see https://github.com/airblade/paper_trail/pull/683)
@@ -354,7 +369,7 @@ a.update_attributes :title => 'My Title', :rating => 3
 a.versions.length                         # 1
 a.update_attributes :title => 'Greeting', :content => 'Hello'
 a.versions.length                         # 2
-a.previous_version.title                  # 'My Title'
+a.paper_trail.previous_version.title      # 'My Title'
 ```
 
 Or, you can specify a list of all attributes you care about:
@@ -374,7 +389,7 @@ a.update_attributes :title => 'My Title'
 a.versions.length                         # 2
 a.update_attributes :content => 'Hello'
 a.versions.length                         # 2
-a.previous_version.content                # nil
+a.paper_trail.previous_version.content    # nil
 ```
 
 The `:ignore` and `:only` options can also accept `Hash` arguments, where the :
@@ -397,10 +412,10 @@ a.update_attributes :title => 'My Title'
 a.versions.length                         # 3
 a.update_attributes :content => 'Hai'
 a.versions.length                         # 3
-a.previous_version.content                # "Hello"
+a.paper_trail.previous_version.content    # "Hello"
 a.update_attributes :title => 'Dif Title'
 a.versions.length                         # 4
-a.previous_version.content                # "Hai"
+a.paper_trail.previous_version.content    # "Hai"
 ```
 
 Passing both `:ignore` and `:only` options will result in the article being
@@ -431,7 +446,7 @@ Turn PaperTrail off for all threads in a `ruby` process.
 PaperTrail.enabled = false
 ```
 
-This is commonly used to speed up tests. See [Testing](#testing) below.
+This is commonly used to speed up tests. See [Testing](#7-testing) below.
 
 There is also a rails config option that does the same thing.
 
@@ -455,8 +470,8 @@ end
 #### Per Class
 
 ```ruby
-Widget.paper_trail_off!
-Widget.paper_trail_on!
+Widget.paper_trail.disable
+Widget.paper_trail.enable
 ```
 
 #### Per Method
@@ -465,13 +480,13 @@ You can call a method without creating a new version using `without_versioning`.
  It takes either a method name as a symbol:
 
 ```ruby
-@widget.without_versioning :destroy
+@widget.paper_trail.without_versioning :destroy
 ```
 
 Or a block:
 
 ```ruby
-@widget.without_versioning do
+@widget.paper_trail.without_versioning do
   @widget.update_attributes :name => 'Ford'
 end
 ```
@@ -498,15 +513,15 @@ PaperTrail makes reverting to a previous version easy:
 widget = Widget.find 42
 widget.update_attributes :name => 'Blah blah'
 # Time passes....
-widget = widget.previous_version  # the widget as it was before the update
-widget.save                       # reverted
+widget = widget.paper_trail.previous_version  # the widget as it was before the update
+widget.save                                   # reverted
 ```
 
 Alternatively you can find the version at a given time:
 
 ```ruby
-widget = widget.version_at(1.day.ago)  # the widget as it was one day ago
-widget.save                            # reverted
+widget = widget.paper_trail.version_at(1.day.ago)  # the widget as it was one day ago
+widget.save                                        # reverted
 ```
 
 Note `version_at` gives you the object, not a version, so you don't need to call
@@ -515,11 +530,12 @@ Note `version_at` gives you the object, not a version, so you don't need to call
 Undeleting is just as simple:
 
 ```ruby
-widget = Widget.find 42
+widget = Widget.find(42)
 widget.destroy
 # Time passes....
-widget = PaperTrail::Version.find(153).reify  # the widget as it was before destruction
-widget.save                         # the widget lives!
+versions = widget.versions    # versions ordered by versions.created_at, ascending
+widget = versions.last.reify  # the widget as it was before destruction
+widget.save                   # the widget lives!
 ```
 
 You could even use PaperTrail to implement an undo system, [Ryan Bates has!][3]
@@ -534,11 +550,11 @@ was/became.  Note that these methods reify the item for you.
 
 ```ruby
 live_widget = Widget.find 42
-live_widget.versions.length           # 4 for example
-widget = live_widget.previous_version # => widget == live_widget.versions.last.reify
-widget = widget.previous_version      # => widget == live_widget.versions[-2].reify
-widget = widget.next_version          # => widget == live_widget.versions.last.reify
-widget.next_version                   # live_widget
+live_widget.versions.length                       # 4, for example
+widget = live_widget.paper_trail.previous_version # => widget == live_widget.versions.last.reify
+widget = widget.paper_trail.previous_version      # => widget == live_widget.versions[-2].reify
+widget = widget.paper_trail.next_version          # => widget == live_widget.versions.last.reify
+widget.paper_trail.next_version                   # live_widget
 ```
 
 If instead you have a particular `version` of an item you can navigate to the
@@ -572,7 +588,7 @@ it came instead from a previous version -- with `live?`:
 ```ruby
 widget = Widget.find 42
 widget.live?                        # true
-widget = widget.previous_version
+widget = widget.paper_trail.previous_version
 widget.live?                        # false
 ```
 
@@ -676,12 +692,12 @@ widget.versions.last.whodunnit              # Andy Stewart
 ```
 
 If your controller has a `current_user` method, PaperTrail provides a
-`before_filter` that will assign `current_user.id` to `PaperTrail.whodunnit`.
-You can add this `before_filter` to your `ApplicationController`.
+`before_action` that will assign `current_user.id` to `PaperTrail.whodunnit`.
+You can add this `before_action` to your `ApplicationController`.
 
 ```ruby
 class ApplicationController
-  before_filter :set_paper_trail_whodunnit
+  before_action :set_paper_trail_whodunnit
 end
 ```
 
@@ -729,10 +745,10 @@ like it does, call `paper_trail_originator` on the object.
 widget = Widget.find 153                    # assume widget has 0 versions
 PaperTrail.whodunnit = 'Alice'
 widget.update_attributes :name => 'Yankee'
-widget.paper_trail_originator               # 'Alice'
+widget.paper_trail.originator               # 'Alice'
 PaperTrail.whodunnit = 'Bob'
 widget.update_attributes :name => 'Zulu'
-widget.paper_trail_originator               # 'Bob'
+widget.paper_trail.originator               # 'Bob'
 first_version, last_version = widget.versions.first, widget.versions.last
 first_version.whodunnit                     # 'Alice'
 first_version.paper_trail_originator        # nil
@@ -749,19 +765,30 @@ string, please try the [paper_trail-globalid][37] gem.
 
 ### 4.b. Associations
 
-**Experimental feature**, see caveats below.
+**Experimental feature**, not recommended for production. See known issues
+below.
 
 PaperTrail can restore three types of associations: Has-One, Has-Many, and
-Has-Many-Through. In order to do this, you will need to create a
-`version_associations` table, either at installation time with the `rails
-generate paper_trail:install --with-associations` option or manually. PaperTrail
-will store in that table additional information to correlate versions of the
-association and versions of the model when the associated record is changed.
-When reifying the model, PaperTrail can use this table, together with the
-`transaction_id` to find the correct version of the association and reify it.
-The `transaction_id` is a unique id for version records created in the same
-transaction. It is used to associate the version of the model and the version of
-the association that are created in the same transaction.
+Has-Many-Through. In order to do this, you will need to do two things:
+
+1. Create a `version_associations` table
+2. Set `PaperTrail.config.track_associations = true` (e.g. in an initializer)
+
+Both will be done for you automatically if you install PaperTrail with the
+`--with_associations` option
+(e.g. `rails generate paper_trail:install --with-associations`)
+
+If you want to add this functionality after the initial installation, you will
+need to create the `version_associations` table manually, and you will need to
+ensure that `PaperTrail.config.track_associations = true` is set.
+
+PaperTrail will store in the `version_associations` table additional information
+to correlate versions of the association and versions of the model when the
+associated record is changed. When reifying the model, PaperTrail can use this
+table, together with the `transaction_id` to find the correct version of the
+association and reify it. The `transaction_id` is a unique id for version records
+created in the same transaction. It is used to associate the version of the model
+and the version of the association that are created in the same transaction.
 
 To restore Has-One associations as they were at the time, pass option `:has_one
 => true` to `reify`. To restore Has-Many and Has-Many-Through associations, use
@@ -840,11 +867,17 @@ widget_0.save!
 widget.reload.wotsit                             # nil
 ```
 
-**Caveats:**
+#### 4.b.1. Known Issues
 
-1. Not compatible with [transactional tests][34], aka. transactional fixtures.
-   This is a known issue [#542](https://github.com/airblade/paper_trail/issues/542)
-   that we'd like to solve.
+Associations are an **experimental feature** and have the following known
+issues, in order of descending importance.
+
+1. PaperTrail only reifies the first level of associations.
+1. [#542](https://github.com/airblade/paper_trail/issues/542) -
+   Not compatible with [transactional tests][34], aka. transactional fixtures.
+1. [#841](https://github.com/airblade/paper_trail/issues/841) -
+   Without a workaround, reified records cannot be persisted if their associated
+   records have been deleted.
 1. Requires database timestamp columns with fractional second precision.
    - Sqlite and postgres timestamps have fractional second precision by default.
    [MySQL timestamps do not][35]. Furthermore, MySQL 5.5 and earlier do not
@@ -853,11 +886,9 @@ widget.reload.wotsit                             # nil
    rails until ActiveRecord 4.2 (https://github.com/rails/rails/pull/14359).
 1. PaperTrail can't restore an association properly if the association record
    can be updated to replace its parent model (by replacing the foreign key)
-1. Currently PaperTrail only supports a single `version_associations` table. The
-   implication is that you can only use a single table to store the versions for
+1. Currently PaperTrail only supports a single `version_associations` table.
+   Therefore, you can only use a single table to store the versions for
    all related models. Sorry for those who use multiple version tables.
-1. PaperTrail only reifies the first level of associations, i.e., it does not
-   reify any associations of its associations, and so on.
 1. PaperTrail relies on the callbacks on the association model (and the :through
    association model for Has-Many-Through associations) to record the versions
    and the relationship between the versions. If the association is changed
@@ -1030,7 +1061,8 @@ Overriding associations is not recommended in general.
 ### 5.c. Generators
 
 PaperTrail has one generator, `paper_trail:install`. It writes, but does not
-run, a migration file. This migration adds (at least) the `versions` table. The
+run, a migration file.  It also creates a PaperTrail configuration intializer.
+The migration adds (at least) the `versions` table. The
 most up-to-date documentation for this generator can be found by running `rails
 generate paper_trail:install --help`, but a copy is included here for
 convenience.
@@ -1049,7 +1081,7 @@ Runtime options:
   -q, [--quiet], [--no-quiet]      # Suppress status output
   -s, [--skip], [--no-skip]        # Skip files that already exist
 
-Generates (but does not run) a migration to add a versions table.
+Generates (but does not run) a migration to add a versions table.  Also generates an initializer file for configuring PaperTrail
 ```
 
 ## 6. Extensibility
@@ -1069,7 +1101,9 @@ class Post < ActiveRecord::Base
 end
 ```
 
-Unlike ActiveRecord's `class_name`, you'll have to supply the complete module path to the class (e.g. `Foo::BarVersion` if your class is inside the module `Foo`).
+Unlike ActiveRecord's `class_name`, you'll have to supply the complete module
+path to the class (e.g. `Foo::BarVersion` if your class is inside the module
+`Foo`).
 
 #### Advantages
 
@@ -1447,7 +1481,11 @@ require 'paper_trail/frameworks/rspec'
 ## 8. Sinatra
 
 To configure PaperTrail for usage with [Sinatra][12], your `Sinatra`
-app must be using `ActiveRecord` 3 or 4. It is also recommended to use the
+app must be using `ActiveRecord` 3 or 4. There is no released version of sinatra yet
+that is compatible with AR 5. We expect sinatra 2.0 to support AR 5, but it will have
+breaking changes that will require changes to PaperTrail.
+
+It is also recommended to use the
 [Sinatra ActiveRecord Extension][13] or something similar for managing your
 applications `ActiveRecord` connection in a manner similar to the way `Rails`
 does. If using the aforementioned `Sinatra ActiveRecord Extension`, steps for
@@ -1496,7 +1534,7 @@ end
   [Thibault](http://samurails.com/about-me/), 29th September 2014
 * [Versioning with PaperTrail](http://www.sitepoint.com/versioning-papertrail),
   [Ilya Bodrov](http://www.sitepoint.com/author/ibodrov), 10th April 2014
-* [Using PaperTrail to track stack traces](http://rubyrailsexpert.com/?p=36),
+* [Using PaperTrail to track stack traces](http://web.archive.org/web/20141120233916/http://rubyrailsexpert.com/?p=36),
   T James Corcoran's blog, 1st October 2013.
 * [RailsCast #255 - Undo with PaperTrail](http://railscasts.com/episodes/255-undo-with-paper-trail),
   28th February 2011.

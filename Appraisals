@@ -11,6 +11,7 @@ appraise "ar3" do
   gem "activerecord", "~> 3.2.22"
   gem "i18n", "~> 0.6.11"
   gem "request_store", "~> 1.1.0"
+  gem "sinatra", "~> 1.4.6"
 
   group :development, :test do
     gem 'railties', '~> 3.2.22'
@@ -23,15 +24,15 @@ end
 
 appraise "ar4" do
   gem "activerecord", "~> 4.2"
+  gem "sinatra", "~> 1.4.6"
 end
 
 appraise "ar5" do
-  gem "activerecord", "5.0.0.beta3"
-  gem "activemodel", "5.0.0.beta3"
-  gem "actionpack", "5.0.0.beta3"
-  gem "railties", "5.0.0.beta3"
-  gem "rspec-rails", "3.5.0.beta3"
+  gem "activerecord", "~> 5.0.0"
+  gem "rspec-rails", "~> 3.5.1"
   gem 'rails-controller-testing'
-  # Sinatra stable conflicts with AR5's rack dependency
-  gem 'sinatra', github: 'sinatra/sinatra'
+
+  # The AR5 version of PaperTrail is not compatible with sinatra 2 yet.
+  # Contributions welcome.
+  # gem "sinatra", "2.0.0.beta2"
 end

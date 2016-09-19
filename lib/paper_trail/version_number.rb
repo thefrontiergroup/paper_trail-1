@@ -2,8 +2,8 @@ module PaperTrail
   # :nodoc:
   module VERSION
     MAJOR = 5
-    MINOR = 1
-    TINY = 0
+    MINOR = 2
+    TINY = 2
     PRE = nil
 
     STRING = [MAJOR, MINOR, TINY, PRE].compact.join(".").freeze

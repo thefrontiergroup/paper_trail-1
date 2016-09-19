@@ -162,7 +162,9 @@ ActiveRecord::Schema.define(version: 20110208155312) do
   add_index "post_versions", ["item_type", "item_id"], name: "index_post_versions_on_item_type_and_item_id"
 
   create_table "post_with_statuses", force: :cascade do |t|
-    t.integer "status"
+    t.integer  "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "posts", force: :cascade do |t|
@@ -248,12 +250,11 @@ ActiveRecord::Schema.define(version: 20110208155312) do
     t.text     "a_text"
     t.integer  "an_integer"
     t.float    "a_float"
-    t.decimal  "a_decimal",          precision: 6, scale: 4
+    t.decimal  "a_decimal",  precision: 6, scale: 4
     t.datetime "a_datetime"
     t.time     "a_time"
     t.date     "a_date"
     t.boolean  "a_boolean"
-    t.string   "sacrificial_column"
     t.string   "type"
     t.datetime "created_at"
     t.datetime "updated_at"
