@@ -84,14 +84,18 @@ module PaperTrail
             through_collection, assoc, options, transaction_id
           )
         else
-          hmt_collection_through_belongs_to(
-            through_collection, assoc, options, transaction_id
-          )
+          unless through_collection.nil?
+            hmt_collection_through_belongs_to(
+              through_collection, assoc, options, transaction_id
+            )
+          end
         end
       end
 
       # @api private
       def hmt_collection_through_has_many(through_collection, assoc, options, transaction_id)
+        through_collection = [through_collection] if !through_collection.respond_to?(:map)
+
         through_collection.each do |through_model|
           reify_has_manys(transaction_id, through_model, options)
         end
@@ -245,7 +249,6 @@ module PaperTrail
 
       def reify_associations(model, options, version)
         reify_has_ones version.transaction_id, model, options if options[:has_one]
-
         reify_belongs_tos version.transaction_id, model, options if options[:belongs_to]
 
         reify_has_manys version.transaction_id, model, options if options[:has_many]
